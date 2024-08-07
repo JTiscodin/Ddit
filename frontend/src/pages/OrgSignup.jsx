@@ -45,7 +45,7 @@ const OrgRegister = () => {
             </h1>
           </div>
           <img
-            className="aspect-auto h-[50vh] self-end animated-element"
+            className="aspect-auto h-[65vh] self-end animated-element"
             src="/Character-standing.png"
           />
           <div className="flex flex-col gap-3 flex-wrap">
