@@ -93,7 +93,7 @@ function AppContent() {
             <ProtectedRoute>
               <Sidebar />
               <div className="flex">
-                <Swapper/>
+                <Swapper />
                 <RightSideBar />
               </div>
             </ProtectedRoute>
