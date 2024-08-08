@@ -78,7 +78,9 @@ const UserRegister = () => {
                     <div className="bg-[#4461F2] p-4 rounded-xl flex justify-between hover:bg-[#253896] cursor-pointer">
                       Upload Your Aadhar Below <img src="/aadhar.png" />
                     </div>
-                    <LogInWithAnonAadhaar nullifierSeed={1234} />
+                    <div className="flex justify-center">
+                      <LogInWithAnonAadhaar nullifierSeed={1234} />
+                    </div>
                   </>
                 ) : (
                   <>

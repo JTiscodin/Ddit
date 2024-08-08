@@ -16,6 +16,7 @@ import CoinExDisplay from "./CoinExDisplay";
 const RightSideBar = ({ title, src, price, description }) => {
   const [imagePreview, setImagePreview] = useState(null);
   const location = useLocation();
+  const render = location.pathname !== "/messages";
   const [searchParams] = useSearchParams();
   const showForm = searchParams.get("mode") !== "special";
   const isProduct = location.pathname !== "/home";
@@ -29,6 +30,10 @@ const RightSideBar = ({ title, src, price, description }) => {
       reader.readAsDataURL(file);
     }
   };
+
+  if (!render) {
+    return <></>;
+  }
   return (
     <div className="flex flex-col items-center text-white fixed overflow-y-auto overflow-x-hidden bg-[#14162E] right-0 p-14 w-[25vw] min-   h-screen">
       {isProduct ? (

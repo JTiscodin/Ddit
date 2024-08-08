@@ -75,6 +75,30 @@ function AppContent() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/messages"
+          element={
+            <ProtectedRoute>
+              <Sidebar />
+              <div className="flex">
+                <Messages />
+                <RightSideBar />
+              </div>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/swapper"
+          element={
+            <ProtectedRoute>
+              <Sidebar />
+              <div className="flex">
+                <Swapper/>
+                <RightSideBar />
+              </div>
+            </ProtectedRoute>
+          }
+        />
         {/* Add similar ProtectedRoute wrappers for other authenticated routes */}
 
         {/* Catch-all route */}

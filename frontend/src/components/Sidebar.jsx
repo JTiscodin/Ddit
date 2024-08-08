@@ -40,12 +40,9 @@ const Sidebar = () => {
         </div>
         {options.map((opt) => {
           return (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 text-xl hover:scale-110 cursor-pointer duration-75">
               {opt.icon}
-              <h1
-                onClick={() => navigate(opt.url)}
-                className="text-xl hover:scale-110 cursor-pointer duration-75"
-              >
+              <h1 onClick={() => navigate(opt.url)} className="">
                 {opt.title}
               </h1>
             </div>

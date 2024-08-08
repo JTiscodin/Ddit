@@ -21,7 +21,7 @@ const MarketPlace = () => {
             className="w-[26vw] hover:scale-105 cursor-pointer duration-150"
           />
         </div>}
-        <h1 className="text-3xl">Products</h1>
+        <h1 className="text-3xl"> {showForm ? "Products" : "Buy for Good"}  </h1>
         <div className="grid grid-cols-3 m-4 gap-4">
           <Item
             title="Slightly used Meta Quest 2"

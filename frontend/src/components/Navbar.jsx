@@ -5,7 +5,7 @@ const Navbar = () => {
 
   return (
     <>
-      <nav className="flex fixed w-screen z-40 text-white justify-between bg-transparent items-center font-semibold p-4">
+      <nav className="flex fixed w-screen  z-40 text-white justify-between bg-transparent items-center font-semibold p-9">
         <div>
           <h1 className="font-bold text-2xl gap-3 flex items-center">
             <span>
