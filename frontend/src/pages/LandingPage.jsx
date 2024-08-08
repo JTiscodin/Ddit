@@ -7,8 +7,8 @@ const LandingPage = () => {
       <div className="flex relative min-h-[80vh] justify-around px-14 items-center">
         {/* Circles */}
         <div className="flex flex-col items-center justify-around w-[40vw] z-10 ">
-          <h1 className="text-6xl text-center opacity-95 tracking-normal font-sans font-bold">
-            AADHAR AT YOUR FINGERTIPS
+          <h1 className="text-7xl text-center opacity-95 tracking-normal font-sans font-bold">
+            Trust at your Fingertips
           </h1>
           <button className="bg-white duration-200 rounded-lg hover:scale-105  text-black p-3 text-2xl mt-10">
             Explore Features

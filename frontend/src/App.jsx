@@ -1,56 +1,98 @@
-import { useState } from "react";
+// App.jsx
+import { useState, useEffect } from "react";
 import "./App.css";
+import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
+import { AnonAadhaarProvider } from "@anon-aadhaar/react";
+import { AuthProvider, useAuth } from "./hooks/useAuth";
 import LandingPage from "./pages/LandingPage";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Register from "./pages/Register";
 import Signin from "./pages/Signin";
 import OrgRegister from "./pages/OrgSignup";
 import UserRegister from "./pages/UserSignup";
-import { AnonAadhaarProvider } from "@anon-aadhaar/react";
 import OrgSignin from "./pages/OrgSignin";
 import UserSignin from "./pages/UserSignin";
 import MarketPlace from "./pages/MarketPlace";
 import ErrorPage from "./pages/ErrorPage";
 import Sidebar from "./components/Sidebar";
 import RightSideBar from "./components/RightSideBar";
+import Messages from "./pages/Messges";
+import Swapper from "./pages/Swapper";
+import Home from "./pages/Home";
 
-function App() {
-  const [authenticated, setauthenticated] = useState(true);
+const ProtectedRoute = ({ children }) => {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  return user ? children : <Navigate to="/signin" />;
+};
+
+function AppContent() {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <>
-      <BrowserRouter>
-        <AnonAadhaarProvider>
-          {authenticated ? (
-            <>
+      {!user && <Navbar />}
+      <Routes>
+        {/* Public routes */}
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/signin" element={<Signin />} />
+        <Route path="/register/org" element={<OrgRegister />} />
+        <Route path="/register/user" element={<UserRegister />} />
+        <Route path="/signin/org" element={<OrgSignin />} />
+        <Route path="/signin/user" element={<UserSignin />} />
+
+        {/* Protected routes */}
+        <Route
+          path="/marketplace"
+          element={
+            <ProtectedRoute>
               <Sidebar />
               <div className="flex">
-                <Routes>
-                  <Route path="/marketplace" element={<MarketPlace />} />
-                  <Route path="*" element={<LandingPage />} />
-                </Routes>
+                <MarketPlace />
                 <RightSideBar />
               </div>
-            </>
-          ) : (
-            <>
-              <Navbar />
-              <Routes>
-                <Route index path="/" element={<LandingPage />} />
-                <Route path="/register" element={<Register />} />
-                <Route path="signin" element={<Signin />} />
-                <Route path="/register/org" element={<OrgRegister />} />
-                <Route path="/register/user" element={<UserRegister />} />
-                <Route path="/signin/org" element={<OrgSignin />} />
-                <Route path="/signin/user" element={<UserSignin />} />
-                <Route path="*" element={<ErrorPage />} />
-              </Routes>
-            </>
-          )}
-        </AnonAadhaarProvider>
-      </BrowserRouter>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/home"
+          element={
+            <ProtectedRoute>
+              <Sidebar />
+              <div className="flex">
+                <Home />
+                <RightSideBar />
+              </div>
+            </ProtectedRoute>
+          }
+        />
+        {/* Add similar ProtectedRoute wrappers for other authenticated routes */}
+
+        {/* Catch-all route */}
+        <Route path="*" element={<ErrorPage />} />
+      </Routes>
     </>
+  );
+}
+
+function App() {
+  return (
+    <BrowserRouter>
+      <AnonAadhaarProvider>
+        <AuthProvider>
+          <AppContent />
+        </AuthProvider>
+      </AnonAadhaarProvider>
+    </BrowserRouter>
   );
 }
 
