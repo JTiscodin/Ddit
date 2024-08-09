@@ -13,10 +13,11 @@ import { useState } from "react";
 import { useLocation, useSearchParams } from "react-router-dom";
 import CoinExDisplay from "./CoinExDisplay";
 
-const RightSideBar = ({ title, src, price, description }) => {
+const RightSideBar = () => {
   const [imagePreview, setImagePreview] = useState(null);
   const location = useLocation();
-  const render = location.pathname !== "/messages";
+  const render =
+    location.pathname != "/messages" && location.pathname != "/swapper";
   const [searchParams] = useSearchParams();
   const showForm = searchParams.get("mode") !== "special";
   const isProduct = location.pathname !== "/home";
@@ -30,6 +31,8 @@ const RightSideBar = ({ title, src, price, description }) => {
       reader.readAsDataURL(file);
     }
   };
+
+  console.log(render, location.pathname)
 
   if (!render) {
     return <></>;

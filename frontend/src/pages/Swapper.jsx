@@ -1,160 +1,139 @@
-import React, { useState } from "react";
-import { ethers } from "ethers";
-import {
-  BitcoinWallet,
-  BitcoinProvider,
-  BitcoinNetwork,
-  EVMWallet,
-} from "@catalogfi/wallets";
-import {
-  Orderbook,
-  Chains,
-  Assets,
-  Actions,
-  parseStatus,
-} from "@gardenfi/orderbook";
-import { GardenJS } from "@gardenfi/core";
-import { Input } from "@/components/ui/input";
+import React, { useState, useEffect } from "react";
+import { useMetaMaskStore, useGarden, useSignStore } from "../lib/store";
+import { Assets } from "@gardenfi/orderbook";
 
-const SwapInterface = () => {
-  const [btcPrivateKey, setBtcPrivateKey] = useState("");
-  const [ethAddress, setEthAddress] = useState("");
-  const [amount, setAmount] = useState("");
-  const [swapStatus, setSwapStatus] = useState(null);
+const Swapper = () => {
+  const [amount, setAmount] = useState({
+    btcAmount: "",
+    wbtcAmount: "",
+  });
+  const [btcAddress, setBtcAddress] = useState("");
 
-  const handleMetamaskConnection = async () => {
-    if (typeof window.ethereum !== "undefined") {
-      try {
-        await window.ethereum.request({ method: "eth_requestAccounts" });
-        const accounts = await window.ethereum.request({
-          method: "eth_accounts",
-        });
+  const { garden, bitcoin } = useGarden();
+  const { metaMaskIsConnected, connectMetaMask } = useMetaMaskStore();
+  const { isSigned } = useSignStore();
 
-        if (accounts.length > 0) {
-          console.log("Connected to MetaMask:", accounts[0]);
-          setEthAddress(accounts[0]);
-        }
-      } catch (error) {
-        console.error("Failed to connect to MetaMask", error);
+  useEffect(() => {
+    const getAddress = async () => {
+      if (bitcoin && isSigned) {
+        const address = await bitcoin.getAddress();
+        setBtcAddress(address);
       }
-    } else {
-      console.log("Please install MetaMask!");
-    }
+    };
+    getAddress();
+  }, [bitcoin, isSigned]);
+
+  const handleAmountChange = (type, value) => {
+    setAmount((prev) => ({
+      ...prev,
+      [type]: value,
+      [type === "btcAmount" ? "wbtcAmount" : "btcAmount"]: (
+        Number(value) * (type === "btcAmount" ? 1.003 : 0.997)
+      ).toFixed(8),
+    }));
   };
 
-  const performSwap = async () => {
+  const handleSwap = async () => {
+    console.log("Swap initiated. Garden object:", garden);
+
+    if (!garden) {
+      console.error(
+        "Garden object is not available. Make sure it's properly initialized."
+      );
+      return;
+    }
+
+    if (!amount.wbtcAmount || !amount.btcAmount) {
+      console.error("Amount values are missing.");
+      return;
+    }
+
+    const sendAmount = Number(amount.wbtcAmount) * 1e8;
+    const receiveAmount = Number(amount.btcAmount) * 1e8;
+
     try {
-      // Ensure that MetaMask is available
-      if (typeof window.ethereum === "undefined") {
-        throw new Error("MetaMask not available");
-      }
-
-      // Initialize Bitcoin wallet
-      const bitcoinWallet = BitcoinWallet.fromPrivateKey(
-        btcPrivateKey,
-        new BitcoinProvider(BitcoinNetwork.Mainnet)
-      );
-
-      // Initialize EVM wallet using MetaMask provider
-      const provider = new ethers.providers.Web3Provider(
-        window.ethereum,
-        "any"
-      );
-      const signer = provider.getSigner();
-      const evmWallet = new EVMWallet(signer);
-
-      // Initialize GardenJS
-      const orderbook = await Orderbook.init({ signer });
-      const garden = new GardenJS(orderbook, {
-        [Chains.bitcoin_testnet]: bitcoinWallet,
-        [Chains.ethereum_sepolia]: evmWallet,
+      console.log("Attempting swap with amounts:", {
+        sendAmount,
+        receiveAmount,
       });
-
-      // Perform the swap
-      const sendAmount = parseFloat(amount) * 1e8; // Convert to Satoshis
-      const receiveAmount = (1 - 0.3 / 100) * sendAmount;
-
-      const orderId = await garden.swap(
-        Assets.bitcoin.BTC,
-        Assets.ethereum.WBTC,
+      await garden.swap(
+        Assets.ethereum_sepolia.WBTC,
+        Assets.bitcoin_testnet.BTC,
         sendAmount,
         receiveAmount
       );
-
-      // Monitor swap status
-      garden.subscribeOrders(await evmWallet.getAddress(), async (orders) => {
-        const order = orders.find((order) => order.ID === orderId);
-        if (order) {
-          const action = parseStatus(order);
-          if (
-            [Actions.UserCanInitiate, Actions.UserCanRedeem].includes(action)
-          ) {
-            const swapOutput = await garden.getSwap(order).next();
-            setSwapStatus(
-              `Completed Action ${swapOutput.action} with transaction hash: ${swapOutput.output}`
-            );
-          }
-        }
-      });
+      console.log("Swap successful");
+      setAmount({ btcAmount: "", wbtcAmount: "" });
     } catch (error) {
-      console.error("Swap failed", error);
-      setSwapStatus("Swap failed: " + error.message);
+      console.error("Swap failed:", error);
     }
   };
 
   return (
-    <div className="bg-[#14162E] h-screen w-screen text-white ">
-      <div className="p-8 max-w-lg mx-auto ">
-        <h1 className="text-2xl font-bold mb-4">Swap BTC to WBTC</h1>
+    <div className="min-h-screen bg-[#14162E] w-screen ml-[15vw] flex justify-center items-center p-14">
+      <div className="bg-[#1A1C34] rounded-lg p-8 w-[40vw] max-w-2xl">
+        <h1 className="text-3xl font-bold text-white mb-6">Swap BTC to WBTC</h1>
 
-        <div className="mb-4">
-          <label className="block">BTC Private Key:</label>
-          <Input
-            type="text"
-            className="w-full p-2 border text-black border-gray-300 rounded"
-            value={btcPrivateKey}
-            onChange={(e) => setBtcPrivateKey(e.target.value)}
-          />
-        </div>
-
-        <div className="mb-4">
-          <label className="block">Amount in BTC:</label>
-          <Input
+        <div className="mb-6">
+          <label htmlFor="wbtc-amount" className="block text-white mb-2">
+            WBTC Amount
+          </label>
+          <input
+            id="wbtc-amount"
             type="number"
-            className="w-full p-2 text-black border border-gray-300 rounded"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
+            placeholder="Enter WBTC amount"
+            value={amount.wbtcAmount}
+            onChange={(e) => handleAmountChange("wbtcAmount", e.target.value)}
+            className="w-full p-3 rounded bg-[#14162E] text-white border border-gray-700"
           />
         </div>
 
-        <button
-          onClick={handleMetamaskConnection}
-          className="bg-blue-500 text-white px-4 py-2 rounded mb-4"
-        >
-          Connect MetaMask
-        </button>
+        <div className="mb-6">
+          <label htmlFor="btc-amount" className="block text-white mb-2">
+            BTC Amount (Estimated)
+          </label>
+          <input
+            id="btc-amount"
+            type="number"
+            placeholder="Estimated BTC amount"
+            value={amount.btcAmount}
+            onChange={(e) => handleAmountChange("btcAmount", e.target.value)}
+            className="w-full p-3 rounded bg-[#14162E] text-white border border-gray-700"
+          />
+        </div>
 
-        {ethAddress && (
-          <div className="mb-4">
-            <p>Connected with: {ethAddress}</p>
-          </div>
-        )}
+        <div className="mb-6">
+          <label htmlFor="receive-address" className="block text-white mb-2">
+            Receive Address
+          </label>
+          <input
+            id="receive-address"
+            placeholder="Enter BTC Address"
+            value={btcAddress}
+            onChange={(e) => setBtcAddress(e.target.value)}
+            className="w-full p-3 rounded bg-[#14162E] text-white border border-gray-700"
+          />
+        </div>
 
-        <button
-          onClick={performSwap}
-          className="bg-[#7418ad] text-white px-4 py-2 rounded"
-        >
-          Swap
-        </button>
-
-        {swapStatus && (
-          <div className="mt-4">
-            <p>{swapStatus}</p>
-          </div>
+        {!metaMaskIsConnected ? (
+          <button
+            onClick={connectMetaMask}
+            className="w-full p-3 rounded bg-blue-600 text-white font-bold hover:bg-blue-700 transition duration-300"
+          >
+            Connect MetaMask
+          </button>
+        ) : (
+          <button
+            onClick={handleSwap}
+            disabled={!amount.wbtcAmount || !amount.btcAmount}
+            className="w-full p-3 rounded bg-green-600 text-white font-bold hover:bg-green-700 transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Swap
+          </button>
         )}
       </div>
     </div>
   );
 };
 
-export default SwapInterface;
+export default Swapper;
